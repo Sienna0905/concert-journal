@@ -8,6 +8,37 @@
   </head>
   <body>
     <main class="app-shell">
+      <div class="top-tools" aria-label="账户和数据">
+        <details class="tool-menu data-menu">
+          <summary>数据</summary>
+          <section class="panel tool-popover toolbar" aria-label="数据操作">
+            <button id="openMemoImportBtn" class="ghost" type="button">从备忘录粘贴导入</button>
+            <label class="file-button">
+              导入 JSON
+              <input id="importInput" type="file" accept="application/json" />
+            </label>
+            <button id="exportBtn" class="ghost" type="button">导出备份</button>
+          </section>
+        </details>
+
+        <details class="tool-menu account-menu">
+          <summary><span id="accountMenuText">账户</span></summary>
+          <section class="panel tool-popover auth-panel" aria-label="登录">
+            <div class="section-title">
+              <h2>账户</h2>
+              <p id="authStatus">当前是本地单人模式。配置 Supabase 后可登录并跨设备同步。</p>
+            </div>
+            <form id="authForm" class="auth-form">
+              <input id="authEmail" type="email" autocomplete="email" placeholder="邮箱" />
+              <input id="authPassword" type="password" autocomplete="current-password" placeholder="密码" />
+              <button id="loginBtn" type="button">登录</button>
+              <button id="signupBtn" class="ghost" type="button">注册</button>
+              <button id="logoutBtn" class="ghost" type="button" hidden>退出</button>
+            </form>
+          </section>
+        </details>
+      </div>
+
       <div class="hero-row">
         <section class="hero">
           <div class="confetti" aria-hidden="true">
@@ -39,31 +70,7 @@
           </div>
         </section>
 
-        <section class="panel toolbar" aria-label="数据操作">
-          <button id="exportBtn" type="button">导出备份</button>
-          <label class="file-button">
-            导入 JSON
-            <input id="importInput" type="file" accept="application/json" />
-          </label>
-          <button id="openMemoImportBtn" class="ghost" type="button">从备忘录粘贴导入</button>
-        </section>
       </div>
-
-      <section class="account-tools">
-        <section class="panel auth-panel" aria-label="登录">
-          <div class="section-title">
-            <h2>账户</h2>
-            <p id="authStatus">当前是本地单人模式。配置 Supabase 后可登录并跨设备同步。</p>
-          </div>
-          <form id="authForm" class="auth-form">
-            <input id="authEmail" type="email" autocomplete="email" placeholder="邮箱" />
-            <input id="authPassword" type="password" autocomplete="current-password" placeholder="密码" />
-            <button id="loginBtn" type="button">登录</button>
-            <button id="signupBtn" class="ghost" type="button">注册</button>
-            <button id="logoutBtn" class="ghost" type="button" hidden>退出</button>
-          </form>
-        </section>
-      </section>
 
       <section class="summary-grid" aria-label="统计">
         <button class="metric" type="button" data-summary="shows">

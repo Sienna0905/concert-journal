@@ -17,6 +17,7 @@ const authPanel = document.querySelector(".auth-panel");
 const authEmail = document.querySelector("#authEmail");
 const authPassword = document.querySelector("#authPassword");
 const authStatus = document.querySelector("#authStatus");
+const accountMenuText = document.querySelector("#accountMenuText");
 const loginBtn = document.querySelector("#loginBtn");
 const signupBtn = document.querySelector("#signupBtn");
 const logoutBtn = document.querySelector("#logoutBtn");
@@ -60,6 +61,7 @@ const editNotice = document.querySelector("#editNotice");
 const ticketViewBtn = document.querySelector("#ticketViewBtn");
 const bubbleViewBtn = document.querySelector("#bubbleViewBtn");
 const stackViewBtn = document.querySelector("#stackViewBtn");
+const toolMenus = document.querySelectorAll(".tool-menu");
 
 let shows = loadLocalShows();
 let currentUser = null;
@@ -67,6 +69,15 @@ let activeSummary = "";
 let moneyHidden = localStorage.getItem("concert-journal-hide-money") !== "false";
 let ticketView = localStorage.getItem("concert-journal-ticket-view") || "ticket";
 let stackSpread = false;
+
+toolMenus.forEach((menu) => {
+  menu.addEventListener("toggle", () => {
+    if (!menu.open) return;
+    toolMenus.forEach((otherMenu) => {
+      if (otherMenu !== menu) otherMenu.open = false;
+    });
+  });
+});
 
 function loadLocalShows() {
   try {
@@ -133,12 +144,14 @@ function renderAuth() {
     authForm.classList.remove("signed-in");
     authPanel.classList.remove("signed-in-panel");
     document.body.classList.remove("signed-in");
+    accountMenuText.textContent = "账户";
     setStatus("当前是本地单人模式。配置 Supabase 后可登录并跨设备同步。");
     return;
   }
 
   if (currentUser) {
     setStatus(`已登录：${currentUser.email}`);
+    accountMenuText.textContent = "已登录";
     authForm.classList.add("signed-in");
     authPanel.classList.add("signed-in-panel");
     document.body.classList.add("signed-in");
@@ -151,6 +164,7 @@ function renderAuth() {
   }
 
   setStatus("请登录或注册。登录后，每个用户只能看到自己的演出记录。");
+  accountMenuText.textContent = "账户";
   authForm.classList.remove("signed-in");
   authPanel.classList.remove("signed-in-panel");
   document.body.classList.remove("signed-in");
