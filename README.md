@@ -26,3 +26,5 @@ window.CONCERT_JOURNAL_CONFIG = {
 ```
 
 不要把 service role key 放进前端代码。
+
+数据库建表和权限设置见 `SUPABASE_SETUP.md` 和 `supabase-schema.sql`。
