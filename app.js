@@ -26,6 +26,8 @@ const fields = {
   date: document.querySelector("#date"),
   city: document.querySelector("#city"),
   venue: document.querySelector("#venue"),
+  status: document.querySelector("#status"),
+  price: document.querySelector("#price"),
   rating: document.querySelector("#rating"),
   companions: document.querySelector("#companions"),
   tags: document.querySelector("#tags"),
@@ -169,6 +171,8 @@ function getFormShow() {
     date: fields.date.value,
     city: fields.city.value.trim(),
     venue: fields.venue.value.trim(),
+    status: fields.status.value.trim(),
+    price: fields.price.value.trim(),
     rating: fields.rating.value ? Number(fields.rating.value) : null,
     companions: splitList(fields.companions.value),
     tags: splitList(fields.tags.value),
@@ -210,6 +214,8 @@ function getVisibleShows() {
       show.artist,
       show.city,
       show.venue,
+      show.status,
+      show.price,
       show.notes,
       ...(show.companions || []),
       ...(show.tags || []),
@@ -245,6 +251,9 @@ function renderShows() {
 
     const rating = show.rating ? ` · ${show.rating}/5` : "";
     const place = [show.city, show.venue].filter(Boolean).join(" · ");
+    const title = show.title || show.artist || "未命名演出";
+    const secondary = show.title && show.artist ? show.title : "";
+    const statusPrice = [show.status, show.price].filter(Boolean).join(" · ");
     const companions = show.companions?.length
       ? ` · 同行：${joinList(show.companions)}`
       : "";
@@ -263,8 +272,8 @@ function renderShows() {
     item.innerHTML = `
       <div class="show-head">
         <div>
-          <h2 class="show-title">${escapeHtml(show.title)}</h2>
-          <p class="show-meta">${escapeHtml(show.artist)} · ${formatDate(show.date)}${rating}</p>
+          <h2 class="show-title">${escapeHtml(show.artist || title)}</h2>
+          <p class="show-meta">${escapeHtml([secondary, formatDate(show.date), statusPrice].filter(Boolean).join(" · "))}${rating}</p>
           <p class="show-meta">${escapeHtml(place || "未填写地点")}${escapeHtml(companions)}</p>
         </div>
       </div>
@@ -303,6 +312,8 @@ function parseMemoBlock(block) {
     date: normalizeDate(text),
     city: "",
     venue: "",
+    status: "",
+    price: "",
     rating: null,
     companions: [],
     tags: [],
@@ -327,6 +338,8 @@ function parseMemoBlock(block) {
     else if (/日期|时间/.test(key)) show.date = normalizeDate(value) || show.date;
     else if (/城市|地点/.test(key)) show.city = value;
     else if (/场馆|场地/.test(key)) show.venue = value;
+    else if (/状态/.test(key)) show.status = value;
+    else if (/票价|价格|金额/.test(key)) show.price = parsePrice(value) || value;
     else if (/评分|打分/.test(key)) show.rating = parseRating(value);
     else if (/同行/.test(key)) show.companions = splitList(value);
     else if (/标签|关键词/.test(key)) show.tags = splitList(value);
@@ -335,6 +348,7 @@ function parseMemoBlock(block) {
   }
 
   show.rating = show.rating || parseRating(text);
+  show.price = show.price || parsePrice(text);
   show.city = show.city || cityNames.find((city) => text.includes(city)) || "";
 
   if (!show.title || !show.artist) {
@@ -360,7 +374,55 @@ function parseRating(value) {
   return match ? Number(match[1]) : null;
 }
 
+function parsePrice(value) {
+  const match = String(value).match(/(?:票价|价格|金额)?\s*[:：]?\s*((?:¥|￥|₩|KRW|RMB|CNY)\s*[\d,]+(?:\.\d+)?|[\d,]+(?:\.\d+)?\s*(?:元|韩元|人民币))/i);
+  return match ? match[1].replace(/\s+/g, "") : "";
+}
+
+function parseTableRows(value) {
+  const lines = value
+    .split("\n")
+    .filter((line) => line.trim())
+    .filter((line) => !/^🎫|^concert list$/i.test(line.trim()))
+    .filter((line) => !/^日期\s+艺人\s+城市/.test(line.trim()));
+
+  return lines
+    .map((line) =>
+      (line.includes("\t") ? line.split("\t") : line.trim().split(/\s{2,}/)).map((cell) =>
+        cell.trim(),
+      ),
+    )
+    .filter((cells) => cells.length >= 3 && normalizeDate(cells[0]))
+    .map((cells) => {
+      let [date, artist, city, status = "", price = "", ...detailParts] = cells;
+      if (!price && parsePrice(status)) {
+        price = status;
+        status = "";
+      }
+      const notes = detailParts.join(" ").trim();
+      return {
+        id: crypto.randomUUID(),
+        title: "",
+        artist,
+        date: normalizeDate(date),
+        city,
+        venue: "",
+        status,
+        price: parsePrice(price) || price,
+        rating: null,
+        companions: [],
+        tags: [],
+        notes,
+        setlist: [],
+        updatedAt: new Date().toISOString(),
+      };
+    });
+}
+
 function parseMemoText(value) {
+  const tableRows = parseTableRows(value);
+  if (tableRows.length) return tableRows;
+
   return value
     .split(/\n\s*\n/)
     .map((block) => block.trim())
@@ -373,7 +435,7 @@ function updateMemoPreview() {
   const parsed = parseMemoText(memoText.value);
   memoPreview.textContent = parsed.length
     ? `已识别 ${parsed.length} 场，将追加到当前票夹。`
-    : "粘贴后会自动识别日期、艺人、城市、场馆、评分和备注。";
+    : "粘贴后会自动识别日期、艺人、城市、状态、票价、详情和备注。";
 }
 
 function render() {
@@ -472,6 +534,8 @@ showsList.addEventListener("click", async (event) => {
   fields.date.value = show.date || "";
   fields.city.value = show.city || "";
   fields.venue.value = show.venue || "";
+  fields.status.value = show.status || "";
+  fields.price.value = show.price || "";
   fields.rating.value = show.rating || "";
   fields.companions.value = joinList(show.companions);
   fields.tags.value = joinList(show.tags);

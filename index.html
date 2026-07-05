@@ -16,7 +16,7 @@
         <div class="hero-copy">
           <p class="eyebrow">Live Journal</p>
           <h1>我的演出票夹</h1>
-          <p class="hero-note">把每一场现场都收进来：日期、城市、歌单、同行人和那天的心情。</p>
+          <p class="hero-note">把每一场现场都收进来：艺人、日期、城市、票价、歌单和那天的心情。</p>
         </div>
         <div class="ticket-stack" aria-hidden="true">
           <div class="ticket ticket-red">
@@ -89,12 +89,12 @@
           </div>
           <div class="form-grid">
             <label>
-              演出名称
-              <input id="title" required placeholder="如：嘉年华世界巡回演唱会" />
+              艺人/项目
+              <input id="artist" required placeholder="如：SEVENTEEN / 首尔爵士音乐节" />
             </label>
             <label>
-              艺人/乐队
-              <input id="artist" required placeholder="如：周杰伦" />
+              演出名称
+              <input id="title" placeholder="可选，如：嘉年华世界巡回演唱会" />
             </label>
             <label>
               日期
@@ -107,6 +107,14 @@
             <label>
               场馆
               <input id="venue" placeholder="如：梅赛德斯-奔驰文化中心" />
+            </label>
+            <label>
+              状态
+              <input id="status" placeholder="如：✅ / 🗓️ / 已看 / 待看" />
+            </label>
+            <label>
+              票价
+              <input id="price" placeholder="如：¥1700 / ₩156000" />
             </label>
             <label>
               评分
@@ -148,7 +156,7 @@
             <p>像翻票根一样回看现场。</p>
           </div>
           <div class="filters">
-            <input id="searchInput" placeholder="搜索演出、艺人、城市、备注" />
+            <input id="searchInput" placeholder="搜索艺人、演出、城市、票价、备注" />
             <select id="sortSelect">
               <option value="dateDesc">日期从新到旧</option>
               <option value="dateAsc">日期从旧到新</option>
@@ -170,7 +178,10 @@
           id="memoText"
           rows="10"
           placeholder="示例：
-2024-05-01 周杰伦 嘉年华 上海 梅赛德斯-奔驰文化中心 评分5
+2024/01/21 SEVENTEEN 澳门 ✅ ¥1700
+
+日期	艺人	城市	状态	票价	详情
+2026/03/08	李泳知	首尔	✅	¥800	vip35号太近了太爽了….
 
 艺人：五月天
 演出：回到那一天
@@ -180,7 +191,7 @@
 歌单：突然好想你 / 倔强
 备注：和朋友一起去，很热血"
         ></textarea>
-        <p id="memoPreview" class="memo-preview">粘贴后会自动识别日期、艺人、城市、场馆、评分和备注。</p>
+        <p id="memoPreview" class="memo-preview">粘贴后会自动识别日期、艺人、城市、状态、票价、详情和备注。</p>
         <div class="form-actions">
           <button id="closeMemoImportBtn" class="ghost" type="button">关闭</button>
           <button id="importMemoBtn" type="button">导入识别结果</button>
