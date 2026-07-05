@@ -8,35 +8,46 @@
   </head>
   <body>
     <main class="app-shell">
-      <section class="hero">
-        <div class="confetti" aria-hidden="true">
-          <span></span><span></span><span></span><span></span><span></span>
-          <span></span><span></span><span></span><span></span><span></span>
-        </div>
-        <div class="hero-copy">
-          <p class="eyebrow">Live Journal</p>
-          <h1>我的演出票夹</h1>
-          <p class="hero-note">把每一场现场都收进来：艺人、日期、城市、票价、歌单和那天的心情。</p>
-        </div>
-        <div class="ticket-stack" aria-hidden="true">
-          <div class="ticket ticket-red">
-            <div>
-              <small>ADMIT ONE</small>
-              <strong>LIVE</strong>
-              <em>MEMORY</em>
-            </div>
-            <i></i>
+      <div class="hero-row">
+        <section class="hero">
+          <div class="confetti" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
           </div>
-          <div class="ticket ticket-green">
-            <div>
-              <small>SECTION</small>
-              <strong>SHOW</strong>
-              <em>TONIGHT</em>
-            </div>
-            <i></i>
+          <div class="hero-copy">
+            <p class="eyebrow">Live Journal</p>
+            <h1>我的演出票夹</h1>
+            <p class="hero-note">把每一场现场都收进来：艺人、日期、城市、票价、歌单和那天的心情。</p>
           </div>
-        </div>
-      </section>
+          <div class="ticket-stack" aria-hidden="true">
+            <div class="ticket ticket-red">
+              <div>
+                <small>ADMIT ONE</small>
+                <strong>LIVE</strong>
+                <em>MEMORY</em>
+              </div>
+              <i></i>
+            </div>
+            <div class="ticket ticket-green">
+              <div>
+                <small>SECTION</small>
+                <strong>SHOW</strong>
+                <em>TONIGHT</em>
+              </div>
+              <i></i>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel toolbar" aria-label="数据操作">
+          <button id="exportBtn" type="button">导出备份</button>
+          <label class="file-button">
+            导入 JSON
+            <input id="importInput" type="file" accept="application/json" />
+          </label>
+          <button id="openMemoImportBtn" class="ghost" type="button">从备忘录粘贴导入</button>
+        </section>
+      </div>
 
       <section class="account-tools">
         <section class="panel auth-panel" aria-label="登录">
@@ -51,15 +62,6 @@
             <button id="signupBtn" class="ghost" type="button">注册</button>
             <button id="logoutBtn" class="ghost" type="button" hidden>退出</button>
           </form>
-        </section>
-
-        <section class="panel toolbar" aria-label="数据操作">
-          <button id="exportBtn" type="button">导出备份</button>
-          <label class="file-button">
-            导入 JSON
-            <input id="importInput" type="file" accept="application/json" />
-          </label>
-          <button id="openMemoImportBtn" class="ghost" type="button">从备忘录粘贴导入</button>
         </section>
       </section>
 
@@ -177,6 +179,7 @@
             <div class="view-toggle" aria-label="视图切换">
               <button id="ticketViewBtn" class="ghost active" type="button">票根</button>
               <button id="bubbleViewBtn" class="ghost" type="button">泡泡</button>
+              <button id="stackViewBtn" class="ghost" type="button">票叠</button>
             </div>
           </div>
           <div class="filters">

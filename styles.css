@@ -96,6 +96,13 @@ button:hover,
   padding: 24px 0 34px;
 }
 
+.hero-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 240px);
+  gap: 0;
+  align-items: start;
+}
+
 .hero {
   position: relative;
   overflow: hidden;
@@ -275,13 +282,11 @@ h1 {
 
 .account-tools {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(190px, 240px);
-  gap: 16px;
-  margin: 18px 0;
+  justify-content: end;
+  margin: 14px 0 18px;
 }
 
 body.signed-in .account-tools {
-  grid-template-columns: minmax(190px, 240px);
   justify-content: end;
 }
 
@@ -290,11 +295,7 @@ body.signed-in .account-tools {
 }
 
 .auth-panel.signed-in-panel {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  z-index: 20;
-  max-width: min(340px, calc(100vw - 24px));
+  max-width: min(340px, 100%);
   padding: 10px 12px;
   opacity: 0.9;
 }
@@ -324,12 +325,19 @@ body.signed-in .account-tools {
 }
 
 .toolbar {
+  width: 100%;
+  min-height: 196px;
+  margin-top: 18px;
+  margin-left: -1px;
   display: grid;
   gap: 10px;
   align-content: start;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 250, 240, 0.96)),
     var(--panel);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  box-shadow: 12px 18px 34px rgba(44, 32, 20, 0.11);
 }
 
 .toolbar button,
@@ -340,6 +348,7 @@ body.signed-in .account-tools {
   color: var(--ink);
   justify-content: flex-start;
   padding: 0 12px;
+  width: 100%;
 }
 
 .toolbar button:first-child {
@@ -689,6 +698,86 @@ textarea:focus {
   display: none;
 }
 
+.shows-list.stack-view {
+  position: relative;
+  min-height: 360px;
+  display: block;
+  cursor: pointer;
+}
+
+.shows-list.stack-view::before {
+  content: "点一下散开票根";
+  display: inline-block;
+  margin-bottom: 16px;
+  color: var(--muted);
+}
+
+.shows-list.stack-view.spread::before {
+  content: "再点一下收回票叠";
+}
+
+.shows-list.stack-view .show-item {
+  position: absolute;
+  top: 58px;
+  left: 24px;
+  width: min(620px, calc(100% - 48px));
+  min-height: 132px;
+  transform:
+    translate(var(--stack-x, 0), var(--stack-y, 0))
+    rotate(var(--stack-rot, -4deg));
+  transition:
+    transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    top 520ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    left 520ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 240ms ease;
+  transition-delay: var(--ticket-delay, 0ms);
+  box-shadow: 0 18px 34px rgba(53, 37, 20, 0.16);
+}
+
+.shows-list.stack-view .show-item:nth-child(odd) {
+  background:
+    linear-gradient(90deg, var(--accent) 0 9px, transparent 9px),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.025) 0 1px, transparent 1px 7px),
+    #fffaf0;
+}
+
+.shows-list.stack-view.spread {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  cursor: default;
+}
+
+.shows-list.stack-view.spread::before {
+  grid-column: 1 / -1;
+}
+
+.shows-list.stack-view.spread .show-item {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: auto;
+  transform:
+    translateY(0)
+    rotate(var(--spread-rot, -1.2deg));
+  animation: ticketDrop 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: var(--drop-delay, 0ms);
+}
+
+@keyframes ticketDrop {
+  from {
+    opacity: 0.35;
+    transform: translateY(-28px) rotate(-5deg) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform:
+      translateY(0)
+      rotate(var(--spread-rot, -1.2deg))
+      scale(1);
+  }
+}
+
 .empty {
   border: 1px dashed #c8b89f;
   border-radius: 10px;
@@ -801,6 +890,7 @@ textarea:focus {
 
 @media (max-width: 900px) {
   .hero,
+  .hero-row,
   .account-tools,
   .workspace,
   .show-head {
@@ -821,6 +911,10 @@ textarea:focus {
 
   .toolbar {
     margin-top: 16px;
+    margin-left: 0;
+    min-height: auto;
+    border-top-left-radius: 14px;
+    border-bottom-left-radius: 14px;
   }
 
   .form-panel.collapsed {
@@ -846,6 +940,7 @@ textarea:focus {
 }
 
 body.editing-record .hero,
+body.editing-record .hero-row,
 body.editing-record .account-tools,
 body.editing-record .summary-grid,
 body.editing-record .summary-panel,

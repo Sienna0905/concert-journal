@@ -59,12 +59,14 @@ const formTitle = document.querySelector("#formTitle");
 const editNotice = document.querySelector("#editNotice");
 const ticketViewBtn = document.querySelector("#ticketViewBtn");
 const bubbleViewBtn = document.querySelector("#bubbleViewBtn");
+const stackViewBtn = document.querySelector("#stackViewBtn");
 
 let shows = loadLocalShows();
 let currentUser = null;
 let activeSummary = "";
 let moneyHidden = localStorage.getItem("concert-journal-hide-money") !== "false";
 let ticketView = localStorage.getItem("concert-journal-ticket-view") || "ticket";
+let stackSpread = false;
 
 function loadLocalShows() {
   try {
@@ -336,8 +338,11 @@ function renderShows() {
   const visibleShows = getVisibleShows();
   showsList.innerHTML = "";
   showsList.classList.toggle("bubble-view", ticketView === "bubble");
+  showsList.classList.toggle("stack-view", ticketView === "stack");
+  showsList.classList.toggle("spread", ticketView === "stack" && stackSpread);
   ticketViewBtn.classList.toggle("active", ticketView === "ticket");
   bubbleViewBtn.classList.toggle("active", ticketView === "bubble");
+  stackViewBtn.classList.toggle("active", ticketView === "stack");
 
   if (!visibleShows.length) {
     const empty = document.createElement("div");
@@ -347,9 +352,16 @@ function renderShows() {
     return;
   }
 
-  for (const show of visibleShows) {
+  visibleShows.forEach((show, index) => {
     const item = document.createElement("article");
     item.className = "show-item";
+    item.style.setProperty("--i", index);
+    item.style.setProperty("--stack-x", `${(index % 5) * 7}px`);
+    item.style.setProperty("--stack-y", `${(index % 5) * 5}px`);
+    item.style.setProperty("--stack-rot", `${-4 + (index % 7) * 1.4}deg`);
+    item.style.setProperty("--spread-rot", `${-1.2 + (index % 5) * 0.6}deg`);
+    item.style.setProperty("--ticket-delay", `${Math.min(index, 10) * 32}ms`);
+    item.style.setProperty("--drop-delay", `${Math.min(index, 10) * 42}ms`);
 
     const rating = show.rating ? ` · ${show.rating}/5` : "";
     const place = [show.city, show.venue].filter(Boolean).join(" · ");
@@ -389,7 +401,7 @@ function renderShows() {
     `;
 
     showsList.append(item);
-  }
+  });
 }
 
 function escapeHtml(value) {
@@ -753,13 +765,28 @@ toggleMoneyBtn.addEventListener("click", () => {
 
 ticketViewBtn.addEventListener("click", () => {
   ticketView = "ticket";
+  stackSpread = false;
   localStorage.setItem("concert-journal-ticket-view", ticketView);
   renderShows();
 });
 
 bubbleViewBtn.addEventListener("click", () => {
   ticketView = "bubble";
+  stackSpread = false;
   localStorage.setItem("concert-journal-ticket-view", ticketView);
+  renderShows();
+});
+
+stackViewBtn.addEventListener("click", () => {
+  ticketView = "stack";
+  stackSpread = false;
+  localStorage.setItem("concert-journal-ticket-view", ticketView);
+  renderShows();
+});
+
+showsList.addEventListener("click", (event) => {
+  if (ticketView !== "stack" || event.target.closest("button[data-action]")) return;
+  stackSpread = !stackSpread;
   renderShows();
 });
 
