@@ -412,6 +412,9 @@ signupBtn.addEventListener("click", async () => {
   const { data, error } = await cloud.auth.signUp({
     email: authEmail.value.trim(),
     password: authPassword.value,
+    options: {
+      emailRedirectTo: `${window.location.origin}${window.location.pathname}`,
+    },
   });
   if (error) {
     setStatus(`注册失败：${error.message}`);
@@ -540,6 +543,10 @@ importInput.addEventListener("change", async () => {
 });
 
 async function init() {
+  const authParams = new URLSearchParams(window.location.hash.slice(1));
+  const authError = authParams.get("error_description");
+  if (authError) setStatus(`邮箱确认失败：${authError}`);
+
   if (cloud) {
     const { data } = await cloud.auth.getSession();
     currentUser = data.session?.user || null;
