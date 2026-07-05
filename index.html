@@ -38,46 +38,58 @@
         </div>
       </section>
 
-      <section class="panel auth-panel" aria-label="登录">
-        <div class="section-title">
-          <h2>账户</h2>
-          <p id="authStatus">当前是本地单人模式。配置 Supabase 后可登录并跨设备同步。</p>
-        </div>
-        <form id="authForm" class="auth-form">
-          <input id="authEmail" type="email" autocomplete="email" placeholder="邮箱" />
-          <input id="authPassword" type="password" autocomplete="current-password" placeholder="密码" />
-          <button id="loginBtn" type="button">登录</button>
-          <button id="signupBtn" class="ghost" type="button">注册</button>
-          <button id="logoutBtn" class="ghost" type="button" hidden>退出</button>
-        </form>
-      </section>
+      <section class="account-tools">
+        <section class="panel auth-panel" aria-label="登录">
+          <div class="section-title">
+            <h2>账户</h2>
+            <p id="authStatus">当前是本地单人模式。配置 Supabase 后可登录并跨设备同步。</p>
+          </div>
+          <form id="authForm" class="auth-form">
+            <input id="authEmail" type="email" autocomplete="email" placeholder="邮箱" />
+            <input id="authPassword" type="password" autocomplete="current-password" placeholder="密码" />
+            <button id="loginBtn" type="button">登录</button>
+            <button id="signupBtn" class="ghost" type="button">注册</button>
+            <button id="logoutBtn" class="ghost" type="button" hidden>退出</button>
+          </form>
+        </section>
 
-      <section class="toolbar" aria-label="数据操作">
-        <button id="exportBtn" type="button">导出备份</button>
-        <label class="file-button">
-          导入 JSON
-          <input id="importInput" type="file" accept="application/json" />
-        </label>
-        <button id="openMemoImportBtn" class="ghost" type="button">从备忘录粘贴导入</button>
+        <section class="panel toolbar" aria-label="数据操作">
+          <button id="exportBtn" type="button">导出备份</button>
+          <label class="file-button">
+            导入 JSON
+            <input id="importInput" type="file" accept="application/json" />
+          </label>
+          <button id="openMemoImportBtn" class="ghost" type="button">从备忘录粘贴导入</button>
+        </section>
       </section>
 
       <section class="summary-grid" aria-label="统计">
-        <div class="metric">
+        <button class="metric" type="button" data-summary="shows">
           <span id="totalCount">0</span>
           <small>场演出</small>
-        </div>
-        <div class="metric">
+        </button>
+        <button class="metric" type="button" data-summary="artists">
           <span id="artistCount">0</span>
           <small>组艺人</small>
-        </div>
-        <div class="metric">
+        </button>
+        <button class="metric" type="button" data-summary="cities">
           <span id="cityCount">0</span>
           <small>座城市</small>
+        </button>
+        <button class="metric" type="button" data-summary="spend">
+          <span id="totalSpend">-</span>
+          <small>票价汇总</small>
+        </button>
+      </section>
+      <section id="summaryPanel" class="panel summary-panel" hidden>
+        <div class="summary-panel-head">
+          <div class="section-title">
+            <h2 id="summaryTitle">汇总</h2>
+            <p id="summarySubtitle">点击统计卡片查看明细。</p>
+          </div>
+          <button id="toggleMoneyBtn" class="ghost" type="button">隐藏金额</button>
         </div>
-        <div class="metric">
-          <span id="avgRating">-</span>
-          <small>平均评分</small>
-        </div>
+        <div id="summaryBubbles" class="summary-bubbles"></div>
       </section>
 
       <section class="workspace">

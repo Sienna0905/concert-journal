@@ -25,6 +25,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -269,15 +273,15 @@ h1 {
 .confetti span:nth-child(9) { bottom: 20%; right: 8%; background: var(--green); transform: rotate(16deg); }
 .confetti span:nth-child(10) { top: 64%; right: 42%; background: var(--gold); transform: rotate(-40deg); }
 
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+.account-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 240px);
+  gap: 16px;
   margin: 18px 0;
 }
 
 .auth-panel {
-  margin-top: 18px;
+  min-width: 0;
 }
 
 .auth-form {
@@ -285,6 +289,16 @@ h1 {
   grid-template-columns: minmax(180px, 1fr) minmax(160px, 0.8fr) auto auto auto;
   gap: 10px;
   align-items: center;
+}
+
+.auth-form.signed-in {
+  grid-template-columns: auto;
+  justify-content: start;
+}
+
+.toolbar {
+  display: grid;
+  gap: 10px;
 }
 
 .file-button input {
@@ -310,11 +324,21 @@ h1 {
 }
 
 .metric {
+  border: 1px solid var(--line);
+  color: var(--ink);
+  cursor: pointer;
   min-height: 86px;
   padding: 16px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  text-align: left;
+}
+
+.metric:hover,
+.metric.active {
+  border-color: var(--accent);
+  box-shadow: 0 14px 30px rgba(128, 47, 42, 0.16);
 }
 
 .metric span {
@@ -327,6 +351,45 @@ h1 {
 .metric small {
   color: var(--muted);
   margin-top: 8px;
+}
+
+.summary-panel {
+  margin-bottom: 16px;
+}
+
+.summary-panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+}
+
+.summary-bubbles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.summary-bubble {
+  border: 1px solid #d6c4a7;
+  border-radius: 999px;
+  background: #fffdf8;
+  color: var(--ink);
+  padding: 10px 14px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 20px rgba(53, 37, 20, 0.07);
+}
+
+.summary-bubble strong {
+  font-family: var(--font-serif);
+  font-size: 18px;
+}
+
+.summary-bubble small {
+  color: var(--muted);
 }
 
 .workspace {
@@ -537,6 +600,7 @@ textarea:focus {
 
 @media (max-width: 900px) {
   .hero,
+  .account-tools,
   .workspace,
   .show-head {
     display: block;
@@ -551,6 +615,10 @@ textarea:focus {
   }
 
   .list-panel {
+    margin-top: 16px;
+  }
+
+  .toolbar {
     margin-top: 16px;
   }
 }
@@ -605,6 +673,10 @@ textarea:focus {
   .form-actions,
   .filters,
   .actions {
+    display: grid;
+  }
+
+  .summary-panel-head {
     display: grid;
   }
 

@@ -47,9 +47,16 @@ const memoPreview = document.querySelector("#memoPreview");
 const importMemoBtn = document.querySelector("#importMemoBtn");
 const openMemoImportBtn = document.querySelector("#openMemoImportBtn");
 const closeMemoImportBtn = document.querySelector("#closeMemoImportBtn");
+const summaryPanel = document.querySelector("#summaryPanel");
+const summaryTitle = document.querySelector("#summaryTitle");
+const summarySubtitle = document.querySelector("#summarySubtitle");
+const summaryBubbles = document.querySelector("#summaryBubbles");
+const toggleMoneyBtn = document.querySelector("#toggleMoneyBtn");
 
 let shows = loadLocalShows();
 let currentUser = null;
+let activeSummary = "";
+let moneyHidden = localStorage.getItem("concert-journal-hide-money") === "true";
 
 function loadLocalShows() {
   try {
@@ -113,12 +120,14 @@ function setStatus(message) {
 
 function renderAuth() {
   if (!cloud) {
+    authForm.classList.remove("signed-in");
     setStatus("当前是本地单人模式。配置 Supabase 后可登录并跨设备同步。");
     return;
   }
 
   if (currentUser) {
     setStatus(`已登录：${currentUser.email}`);
+    authForm.classList.add("signed-in");
     authEmail.hidden = true;
     authPassword.hidden = true;
     loginBtn.hidden = true;
@@ -128,6 +137,7 @@ function renderAuth() {
   }
 
   setStatus("请登录或注册。登录后，每个用户只能看到自己的演出记录。");
+  authForm.classList.remove("signed-in");
   authEmail.hidden = false;
   authPassword.hidden = false;
   loginBtn.hidden = false;
@@ -194,16 +204,32 @@ function resetForm() {
 function renderStats() {
   const artists = new Set(shows.map((show) => show.artist).filter(Boolean));
   const cities = new Set(shows.map((show) => show.city).filter(Boolean));
-  const ratings = shows
-    .map((show) => show.rating)
-    .filter((rating) => Number.isFinite(rating));
+  const spend = summarizeSpend(shows);
 
   document.querySelector("#totalCount").textContent = shows.length;
   document.querySelector("#artistCount").textContent = artists.size;
   document.querySelector("#cityCount").textContent = cities.size;
-  document.querySelector("#avgRating").textContent = ratings.length
-    ? (ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length).toFixed(1)
-    : "-";
+  document.querySelector("#totalSpend").textContent = formatSpendSummary(spend);
+}
+
+function summarizeSpend(items) {
+  return items.reduce((totals, show) => {
+    const price = parsePriceAmount(show.price);
+    if (!price) return totals;
+    totals[price.currency] = (totals[price.currency] || 0) + price.amount;
+    return totals;
+  }, {});
+}
+
+function formatSpendSummary(spend) {
+  const entries = Object.entries(spend);
+  if (!entries.length) return "-";
+  if (moneyHidden) return "••••";
+  return entries.map(([currency, amount]) => `${currency}${formatAmount(amount)}`).join(" / ");
+}
+
+function formatAmount(amount) {
+  return Math.round(amount).toLocaleString("zh-CN");
 }
 
 function getVisibleShows() {
@@ -379,6 +405,22 @@ function parsePrice(value) {
   return match ? match[1].replace(/\s+/g, "") : "";
 }
 
+function parsePriceAmount(value) {
+  const text = String(value || "").replace(/\s+/g, "");
+  const amountMatch = text.match(/[\d,]+(?:\.\d+)?/);
+  if (!amountMatch) return null;
+
+  let currency = "";
+  if (/₩|KRW|韩元/i.test(text)) currency = "₩";
+  else if (/¥|￥|RMB|CNY|元|人民币/i.test(text)) currency = "¥";
+  else return null;
+
+  return {
+    currency,
+    amount: Number(amountMatch[0].replace(/,/g, "")),
+  };
+}
+
 function parseTableRows(value) {
   const lines = value
     .split("\n")
@@ -438,10 +480,78 @@ function updateMemoPreview() {
     : "粘贴后会自动识别日期、艺人、城市、状态、票价、详情和备注。";
 }
 
+function countBy(items, getKey) {
+  return items.reduce((counts, item) => {
+    const key = getKey(item);
+    if (!key) return counts;
+    counts[key] = (counts[key] || 0) + 1;
+    return counts;
+  }, {});
+}
+
+function renderSummary(type = activeSummary) {
+  activeSummary = type;
+  document
+    .querySelectorAll(".metric")
+    .forEach((metric) => metric.classList.toggle("active", metric.dataset.summary === type));
+
+  if (!type) {
+    summaryPanel.hidden = true;
+    return;
+  }
+
+  summaryPanel.hidden = false;
+  toggleMoneyBtn.hidden = type !== "spend";
+  toggleMoneyBtn.textContent = moneyHidden ? "显示金额" : "隐藏金额";
+
+  const renderCountBubbles = (counts) =>
+    Object.entries(counts)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "zh-CN"))
+      .map(
+        ([label, count]) =>
+          `<span class="summary-bubble"><strong>${escapeHtml(label)}</strong><small>${count} 场</small></span>`,
+      )
+      .join("");
+
+  if (type === "shows") {
+    summaryTitle.textContent = "演出时间线";
+    summarySubtitle.textContent = "按日期查看每场记录。";
+    summaryBubbles.innerHTML = shows
+      .slice()
+      .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+      .map(
+        (show) =>
+          `<span class="summary-bubble"><strong>${escapeHtml(show.artist || "未命名")}</strong><small>${formatDate(show.date)} · ${escapeHtml(show.city || "未填写城市")}</small></span>`,
+      )
+      .join("");
+  } else if (type === "artists") {
+    summaryTitle.textContent = "艺人汇总";
+    summarySubtitle.textContent = "看过最多的艺人会排在前面。";
+    summaryBubbles.innerHTML = renderCountBubbles(countBy(shows, (show) => show.artist));
+  } else if (type === "cities") {
+    summaryTitle.textContent = "城市汇总";
+    summarySubtitle.textContent = "按城市统计演出次数。";
+    summaryBubbles.innerHTML = renderCountBubbles(countBy(shows, (show) => show.city));
+  } else if (type === "spend") {
+    summaryTitle.textContent = "票价汇总";
+    summarySubtitle.textContent = moneyHidden ? "金额已隐藏。" : "按币种分别汇总已填写的票价。";
+    const spend = summarizeSpend(shows);
+    summaryBubbles.innerHTML = Object.entries(spend).length
+      ? Object.entries(spend)
+          .map(
+            ([currency, amount]) =>
+              `<span class="summary-bubble"><strong>${currency}</strong><small>${moneyHidden ? "••••" : formatAmount(amount)}</small></span>`,
+          )
+          .join("")
+      : `<span class="summary-bubble"><strong>暂无票价</strong><small>导入或填写票价后显示</small></span>`;
+  }
+}
+
 function render() {
   renderAuth();
   renderStats();
   renderShows();
+  renderSummary();
 }
 
 authForm.addEventListener("submit", (event) => {
@@ -549,6 +659,19 @@ cancelEditBtn.addEventListener("click", resetForm);
 searchInput.addEventListener("input", renderShows);
 sortSelect.addEventListener("change", renderShows);
 memoText.addEventListener("input", updateMemoPreview);
+
+document.querySelectorAll(".metric").forEach((metric) => {
+  metric.addEventListener("click", () => {
+    renderSummary(activeSummary === metric.dataset.summary ? "" : metric.dataset.summary);
+  });
+});
+
+toggleMoneyBtn.addEventListener("click", () => {
+  moneyHidden = !moneyHidden;
+  localStorage.setItem("concert-journal-hide-money", String(moneyHidden));
+  renderStats();
+  renderSummary("spend");
+});
 
 openMemoImportBtn.addEventListener("click", () => {
   memoDialog.showModal();
