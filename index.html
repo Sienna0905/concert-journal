@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>演出记录</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero">
+        <div class="confetti" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="hero-copy">
+          <p class="eyebrow">Live Journal</p>
+          <h1>我的演出票夹</h1>
+          <p class="hero-note">把每一场现场都收进来：日期、城市、歌单、同行人和那天的心情。</p>
+        </div>
+        <div class="ticket-stack" aria-hidden="true">
+          <div class="ticket ticket-red">
+            <div>
+              <small>ADMIT ONE</small>
+              <strong>LIVE</strong>
+              <em>MEMORY</em>
+            </div>
+            <i></i>
+          </div>
+          <div class="ticket ticket-green">
+            <div>
+              <small>SECTION</small>
+              <strong>SHOW</strong>
+              <em>TONIGHT</em>
+            </div>
+            <i></i>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel auth-panel" aria-label="登录">
+        <div class="section-title">
+          <h2>账户</h2>
+          <p id="authStatus">当前是本地单人模式。配置 Supabase 后可登录并跨设备同步。</p>
+        </div>
+        <form id="authForm" class="auth-form">
+          <input id="authEmail" type="email" autocomplete="email" placeholder="邮箱" />
+          <input id="authPassword" type="password" autocomplete="current-password" placeholder="密码" />
+          <button id="loginBtn" type="button">登录</button>
+          <button id="signupBtn" class="ghost" type="button">注册</button>
+          <button id="logoutBtn" class="ghost" type="button" hidden>退出</button>
+        </form>
+      </section>
+
+      <section class="toolbar" aria-label="数据操作">
+        <button id="exportBtn" type="button">导出备份</button>
+        <label class="file-button">
+          导入 JSON
+          <input id="importInput" type="file" accept="application/json" />
+        </label>
+        <button id="openMemoImportBtn" class="ghost" type="button">从备忘录粘贴导入</button>
+      </section>
+
+      <section class="summary-grid" aria-label="统计">
+        <div class="metric">
+          <span id="totalCount">0</span>
+          <small>场演出</small>
+        </div>
+        <div class="metric">
+          <span id="artistCount">0</span>
+          <small>组艺人</small>
+        </div>
+        <div class="metric">
+          <span id="cityCount">0</span>
+          <small>座城市</small>
+        </div>
+        <div class="metric">
+          <span id="avgRating">-</span>
+          <small>平均评分</small>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <form id="showForm" class="panel form-panel">
+          <input id="editingId" type="hidden" />
+          <div class="section-title">
+            <h2>新增记录</h2>
+            <p>先填最重要的几项，细节以后也能补。</p>
+          </div>
+          <div class="form-grid">
+            <label>
+              演出名称
+              <input id="title" required placeholder="如：嘉年华世界巡回演唱会" />
+            </label>
+            <label>
+              艺人/乐队
+              <input id="artist" required placeholder="如：周杰伦" />
+            </label>
+            <label>
+              日期
+              <input id="date" type="date" required />
+            </label>
+            <label>
+              城市
+              <input id="city" placeholder="如：上海" />
+            </label>
+            <label>
+              场馆
+              <input id="venue" placeholder="如：梅赛德斯-奔驰文化中心" />
+            </label>
+            <label>
+              评分
+              <select id="rating">
+                <option value="">未评分</option>
+                <option value="5">5 - 神级现场</option>
+                <option value="4">4 - 很值得</option>
+                <option value="3">3 - 还不错</option>
+                <option value="2">2 - 一般</option>
+                <option value="1">1 - 失望</option>
+              </select>
+            </label>
+            <label>
+              同行人
+              <input id="companions" placeholder="用逗号分隔" />
+            </label>
+            <label>
+              关键词
+              <input id="tags" placeholder="安可, 内场, 摇滚" />
+            </label>
+            <label class="wide">
+              备注
+              <textarea id="notes" rows="5" placeholder="记录返场、印象最深的歌、票价、座位等"></textarea>
+            </label>
+            <label class="wide">
+              歌单
+              <textarea id="setlist" rows="4" placeholder="每行一首歌"></textarea>
+            </label>
+          </div>
+          <div class="form-actions">
+            <button id="cancelEditBtn" class="ghost" type="button" hidden>取消编辑</button>
+            <button type="submit">保存记录</button>
+          </div>
+        </form>
+
+        <section class="panel list-panel">
+          <div class="section-title">
+            <h2>票夹</h2>
+            <p>像翻票根一样回看现场。</p>
+          </div>
+          <div class="filters">
+            <input id="searchInput" placeholder="搜索演出、艺人、城市、备注" />
+            <select id="sortSelect">
+              <option value="dateDesc">日期从新到旧</option>
+              <option value="dateAsc">日期从旧到新</option>
+              <option value="ratingDesc">评分从高到低</option>
+            </select>
+          </div>
+          <div id="showsList" class="shows-list"></div>
+        </section>
+      </section>
+    </main>
+
+    <dialog id="memoDialog" class="memo-dialog">
+      <form method="dialog" class="memo-card">
+        <div class="section-title">
+          <h2>从备忘录导入</h2>
+          <p>可粘贴一行一场，或用空行分隔多场记录。</p>
+        </div>
+        <textarea
+          id="memoText"
+          rows="10"
+          placeholder="示例：
+2024-05-01 周杰伦 嘉年华 上海 梅赛德斯-奔驰文化中心 评分5
+
+艺人：五月天
+演出：回到那一天
+日期：2023.09.08
+城市：北京
+场馆：鸟巢
+歌单：突然好想你 / 倔强
+备注：和朋友一起去，很热血"
+        ></textarea>
+        <p id="memoPreview" class="memo-preview">粘贴后会自动识别日期、艺人、城市、场馆、评分和备注。</p>
+        <div class="form-actions">
+          <button id="closeMemoImportBtn" class="ghost" type="button">关闭</button>
+          <button id="importMemoBtn" type="button">导入识别结果</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
