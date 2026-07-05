@@ -13,6 +13,7 @@ const cloud = supabaseReady
 
 const form = document.querySelector("#showForm");
 const authForm = document.querySelector("#authForm");
+const authPanel = document.querySelector(".auth-panel");
 const authEmail = document.querySelector("#authEmail");
 const authPassword = document.querySelector("#authPassword");
 const authStatus = document.querySelector("#authStatus");
@@ -52,11 +53,18 @@ const summaryTitle = document.querySelector("#summaryTitle");
 const summarySubtitle = document.querySelector("#summarySubtitle");
 const summaryBubbles = document.querySelector("#summaryBubbles");
 const toggleMoneyBtn = document.querySelector("#toggleMoneyBtn");
+const formBody = document.querySelector("#formBody");
+const toggleFormBtn = document.querySelector("#toggleFormBtn");
+const formTitle = document.querySelector("#formTitle");
+const editNotice = document.querySelector("#editNotice");
+const ticketViewBtn = document.querySelector("#ticketViewBtn");
+const bubbleViewBtn = document.querySelector("#bubbleViewBtn");
 
 let shows = loadLocalShows();
 let currentUser = null;
 let activeSummary = "";
-let moneyHidden = localStorage.getItem("concert-journal-hide-money") === "true";
+let moneyHidden = localStorage.getItem("concert-journal-hide-money") !== "false";
+let ticketView = localStorage.getItem("concert-journal-ticket-view") || "ticket";
 
 function loadLocalShows() {
   try {
@@ -121,6 +129,7 @@ function setStatus(message) {
 function renderAuth() {
   if (!cloud) {
     authForm.classList.remove("signed-in");
+    authPanel.classList.remove("signed-in-panel");
     setStatus("当前是本地单人模式。配置 Supabase 后可登录并跨设备同步。");
     return;
   }
@@ -128,6 +137,7 @@ function renderAuth() {
   if (currentUser) {
     setStatus(`已登录：${currentUser.email}`);
     authForm.classList.add("signed-in");
+    authPanel.classList.add("signed-in-panel");
     authEmail.hidden = true;
     authPassword.hidden = true;
     loginBtn.hidden = true;
@@ -138,6 +148,7 @@ function renderAuth() {
 
   setStatus("请登录或注册。登录后，每个用户只能看到自己的演出记录。");
   authForm.classList.remove("signed-in");
+  authPanel.classList.remove("signed-in-panel");
   authEmail.hidden = false;
   authPassword.hidden = false;
   loginBtn.hidden = false;
@@ -173,13 +184,23 @@ function normalizeDate(value) {
   return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 }
 
+function normalizeCity(value = "") {
+  const city = String(value).trim();
+  const cityRoots = [
+    "首尔", "釜山", "香港", "澳门", "光州", "北京", "上海", "广州", "深圳",
+    "成都", "重庆", "杭州", "南京", "武汉", "西安", "长沙", "苏州", "天津",
+    "青岛", "厦门", "郑州", "宁波", "合肥", "佛山", "台北", "新加坡", "东京", "首尔",
+  ];
+  return cityRoots.find((root) => city.includes(root)) || city;
+}
+
 function getFormShow() {
   return {
     id: fields.editingId.value || crypto.randomUUID(),
     title: fields.title.value.trim(),
     artist: fields.artist.value.trim(),
     date: fields.date.value,
-    city: fields.city.value.trim(),
+    city: normalizeCity(fields.city.value),
     venue: fields.venue.value.trim(),
     status: fields.status.value.trim(),
     price: fields.price.value.trim(),
@@ -199,11 +220,33 @@ function resetForm() {
   form.reset();
   fields.editingId.value = "";
   cancelEditBtn.hidden = true;
+  formTitle.textContent = "新增记录";
+  editNotice.hidden = true;
+  document.body.classList.remove("editing-record");
+}
+
+function setFormExpanded(expanded) {
+  formBody.hidden = !expanded;
+  toggleFormBtn.textContent = expanded ? "收起" : "展开";
+}
+
+function enterEditMode() {
+  setFormExpanded(true);
+  formTitle.textContent = "编辑记录";
+  editNotice.hidden = false;
+  cancelEditBtn.hidden = false;
+  document.body.classList.add("editing-record");
+  form.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function exitEditMode() {
+  resetForm();
+  setFormExpanded(false);
 }
 
 function renderStats() {
   const artists = new Set(shows.map((show) => show.artist).filter(Boolean));
-  const cities = new Set(shows.map((show) => show.city).filter(Boolean));
+  const cities = new Set(shows.map((show) => normalizeCity(show.city)).filter(Boolean));
   const spend = summarizeSpend(shows);
 
   document.querySelector("#totalCount").textContent = shows.length;
@@ -262,6 +305,9 @@ function getVisibleShows() {
 function renderShows() {
   const visibleShows = getVisibleShows();
   showsList.innerHTML = "";
+  showsList.classList.toggle("bubble-view", ticketView === "bubble");
+  ticketViewBtn.classList.toggle("active", ticketView === "ticket");
+  bubbleViewBtn.classList.toggle("active", ticketView === "bubble");
 
   if (!visibleShows.length) {
     const empty = document.createElement("div");
@@ -362,7 +408,7 @@ function parseMemoBlock(block) {
     if (/艺人|歌手|乐队/.test(key)) show.artist = value;
     else if (/演出|标题|名称|主题/.test(key)) show.title = value;
     else if (/日期|时间/.test(key)) show.date = normalizeDate(value) || show.date;
-    else if (/城市|地点/.test(key)) show.city = value;
+    else if (/城市|地点/.test(key)) show.city = normalizeCity(value);
     else if (/场馆|场地/.test(key)) show.venue = value;
     else if (/状态/.test(key)) show.status = value;
     else if (/票价|价格|金额/.test(key)) show.price = parsePrice(value) || value;
@@ -375,7 +421,7 @@ function parseMemoBlock(block) {
 
   show.rating = show.rating || parseRating(text);
   show.price = show.price || parsePrice(text);
-  show.city = show.city || cityNames.find((city) => text.includes(city)) || "";
+  show.city = normalizeCity(show.city || cityNames.find((city) => text.includes(city)) || "");
 
   if (!show.title || !show.artist) {
     const cleaned = text
@@ -447,7 +493,7 @@ function parseTableRows(value) {
         title: "",
         artist,
         date: normalizeDate(date),
-        city,
+        city: normalizeCity(city),
         venue: "",
         status,
         price: parsePrice(price) || price,
@@ -502,7 +548,7 @@ function renderSummary(type = activeSummary) {
 
   summaryPanel.hidden = false;
   toggleMoneyBtn.hidden = type !== "spend";
-  toggleMoneyBtn.textContent = moneyHidden ? "显示金额" : "隐藏金额";
+  toggleMoneyBtn.textContent = moneyHidden ? "👁 显示金额" : "🙈 隐藏金额";
 
   const renderCountBubbles = (counts) =>
     Object.entries(counts)
@@ -531,7 +577,7 @@ function renderSummary(type = activeSummary) {
   } else if (type === "cities") {
     summaryTitle.textContent = "城市汇总";
     summarySubtitle.textContent = "按城市统计演出次数。";
-    summaryBubbles.innerHTML = renderCountBubbles(countBy(shows, (show) => show.city));
+    summaryBubbles.innerHTML = renderCountBubbles(countBy(shows, (show) => normalizeCity(show.city)));
   } else if (type === "spend") {
     summaryTitle.textContent = "票价汇总";
     summarySubtitle.textContent = moneyHidden ? "金额已隐藏。" : "按币种分别汇总已填写的票价。";
@@ -619,7 +665,7 @@ form.addEventListener("submit", async (event) => {
 
   saveLocalShows();
   await saveShowToCloud(show);
-  resetForm();
+  exitEditMode();
   render();
 });
 
@@ -651,11 +697,13 @@ showsList.addEventListener("click", async (event) => {
   fields.tags.value = joinList(show.tags);
   fields.notes.value = show.notes || "";
   fields.setlist.value = Array.isArray(show.setlist) ? show.setlist.join("\n") : "";
-  cancelEditBtn.hidden = false;
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  enterEditMode();
 });
 
-cancelEditBtn.addEventListener("click", resetForm);
+cancelEditBtn.addEventListener("click", exitEditMode);
+toggleFormBtn.addEventListener("click", () => {
+  setFormExpanded(formBody.hidden);
+});
 searchInput.addEventListener("input", renderShows);
 sortSelect.addEventListener("change", renderShows);
 memoText.addEventListener("input", updateMemoPreview);
@@ -671,6 +719,18 @@ toggleMoneyBtn.addEventListener("click", () => {
   localStorage.setItem("concert-journal-hide-money", String(moneyHidden));
   renderStats();
   renderSummary("spend");
+});
+
+ticketViewBtn.addEventListener("click", () => {
+  ticketView = "ticket";
+  localStorage.setItem("concert-journal-ticket-view", ticketView);
+  renderShows();
+});
+
+bubbleViewBtn.addEventListener("click", () => {
+  ticketView = "bubble";
+  localStorage.setItem("concert-journal-ticket-view", ticketView);
+  renderShows();
 });
 
 openMemoImportBtn.addEventListener("click", () => {

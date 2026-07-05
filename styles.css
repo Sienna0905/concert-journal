@@ -284,6 +284,28 @@ h1 {
   min-width: 0;
 }
 
+.auth-panel.signed-in-panel {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 20;
+  max-width: min(340px, calc(100vw - 24px));
+  padding: 10px 12px;
+  opacity: 0.9;
+}
+
+.auth-panel.signed-in-panel .section-title {
+  margin-bottom: 8px;
+}
+
+.auth-panel.signed-in-panel .section-title h2 {
+  font-size: 16px;
+}
+
+.auth-panel.signed-in-panel .section-title p {
+  font-size: 13px;
+}
+
 .auth-form {
   display: grid;
   grid-template-columns: minmax(180px, 1fr) minmax(160px, 0.8fr) auto auto auto;
@@ -394,9 +416,17 @@ h1 {
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(320px, 430px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
   gap: 16px;
   align-items: start;
+}
+
+.list-panel {
+  order: 1;
+}
+
+.form-panel {
+  order: 2;
 }
 
 .panel {
@@ -404,6 +434,10 @@ h1 {
 }
 
 .section-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
   margin-bottom: 14px;
 }
 
@@ -418,6 +452,36 @@ h1 {
   margin-bottom: 0;
   color: var(--muted);
   line-height: 1.55;
+}
+
+.form-body {
+  margin-top: 12px;
+}
+
+.edit-notice {
+  border: 1px solid rgba(189, 60, 64, 0.32);
+  border-radius: 10px;
+  background: #f8e9e4;
+  color: var(--accent-strong);
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-weight: 750;
+}
+
+.view-toggle {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.view-toggle button {
+  min-height: 34px;
+  padding: 0 10px;
+}
+
+.view-toggle .active {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+  background: #f7e6df;
 }
 
 .form-grid {
@@ -486,6 +550,42 @@ textarea:focus {
 .shows-list {
   display: grid;
   gap: 12px;
+}
+
+.shows-list.bubble-view {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.shows-list.bubble-view .show-item {
+  width: auto;
+  min-width: 170px;
+  max-width: 260px;
+  border-radius: 999px;
+  padding: 14px 18px;
+}
+
+.shows-list.bubble-view .show-item::after,
+.shows-list.bubble-view .show-actions,
+.shows-list.bubble-view .show-notes,
+.shows-list.bubble-view .show-setlist,
+.shows-list.bubble-view .show-tags {
+  display: none;
+}
+
+.shows-list.bubble-view .show-head,
+.shows-list.bubble-view .show-meta {
+  margin: 0;
+  padding: 0;
+}
+
+.shows-list.bubble-view .show-title {
+  font-size: 17px;
+}
+
+.shows-list.bubble-view .show-meta + .show-meta {
+  display: none;
 }
 
 .empty {
@@ -621,6 +721,23 @@ textarea:focus {
   .toolbar {
     margin-top: 16px;
   }
+}
+
+body.editing-record .hero,
+body.editing-record .account-tools,
+body.editing-record .summary-grid,
+body.editing-record .summary-panel,
+body.editing-record .list-panel {
+  display: none !important;
+}
+
+body.editing-record .workspace {
+  display: block;
+}
+
+body.editing-record .form-panel {
+  max-width: 760px;
+  margin: 0 auto;
 }
 
 @media (max-width: 620px) {

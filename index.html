@@ -95,77 +95,89 @@
       <section class="workspace">
         <form id="showForm" class="panel form-panel">
           <input id="editingId" type="hidden" />
+          <div id="editNotice" class="edit-notice" hidden>正在编辑原有记录，保存或取消后返回票夹。</div>
           <div class="section-title">
-            <h2>新增记录</h2>
-            <p>先填最重要的几项，细节以后也能补。</p>
+            <div>
+              <h2 id="formTitle">新增记录</h2>
+              <p>先填最重要的几项，细节以后也能补。</p>
+            </div>
+            <button id="toggleFormBtn" class="ghost" type="button">展开</button>
           </div>
-          <div class="form-grid">
-            <label>
-              艺人/项目
-              <input id="artist" required placeholder="如：SEVENTEEN / 首尔爵士音乐节" />
-            </label>
-            <label>
-              演出名称
-              <input id="title" placeholder="可选，如：嘉年华世界巡回演唱会" />
-            </label>
-            <label>
-              日期
-              <input id="date" type="date" required />
-            </label>
-            <label>
-              城市
-              <input id="city" placeholder="如：上海" />
-            </label>
-            <label>
-              场馆
-              <input id="venue" placeholder="如：梅赛德斯-奔驰文化中心" />
-            </label>
-            <label>
-              状态
-              <input id="status" placeholder="如：✅ / 🗓️ / 已看 / 待看" />
-            </label>
-            <label>
-              票价
-              <input id="price" placeholder="如：¥1700 / ₩156000" />
-            </label>
-            <label>
-              评分
-              <select id="rating">
-                <option value="">未评分</option>
-                <option value="5">5 - 神级现场</option>
-                <option value="4">4 - 很值得</option>
-                <option value="3">3 - 还不错</option>
-                <option value="2">2 - 一般</option>
-                <option value="1">1 - 失望</option>
-              </select>
-            </label>
-            <label>
-              同行人
-              <input id="companions" placeholder="用逗号分隔" />
-            </label>
-            <label>
-              关键词
-              <input id="tags" placeholder="安可, 内场, 摇滚" />
-            </label>
-            <label class="wide">
-              备注
-              <textarea id="notes" rows="5" placeholder="记录返场、印象最深的歌、票价、座位等"></textarea>
-            </label>
-            <label class="wide">
-              歌单
-              <textarea id="setlist" rows="4" placeholder="每行一首歌"></textarea>
-            </label>
-          </div>
-          <div class="form-actions">
-            <button id="cancelEditBtn" class="ghost" type="button" hidden>取消编辑</button>
-            <button type="submit">保存记录</button>
+          <div id="formBody" class="form-body" hidden>
+            <div class="form-grid">
+              <label>
+                艺人/项目
+                <input id="artist" required placeholder="如：SEVENTEEN / 首尔爵士音乐节" />
+              </label>
+              <label>
+                演出名称
+                <input id="title" placeholder="可选，如：嘉年华世界巡回演唱会" />
+              </label>
+              <label>
+                日期
+                <input id="date" type="date" required />
+              </label>
+              <label>
+                城市
+                <input id="city" placeholder="如：上海 / 首尔惠化" />
+              </label>
+              <label>
+                场馆
+                <input id="venue" placeholder="如：梅赛德斯-奔驰文化中心" />
+              </label>
+              <label>
+                状态
+                <input id="status" placeholder="如：✅ / 🗓️ / 已看 / 待看" />
+              </label>
+              <label>
+                票价
+                <input id="price" placeholder="如：¥1700 / ₩156000" />
+              </label>
+              <label>
+                评分
+                <select id="rating">
+                  <option value="">未评分</option>
+                  <option value="5">5 - 神级现场</option>
+                  <option value="4">4 - 很值得</option>
+                  <option value="3">3 - 还不错</option>
+                  <option value="2">2 - 一般</option>
+                  <option value="1">1 - 失望</option>
+                </select>
+              </label>
+              <label>
+                同行人
+                <input id="companions" placeholder="用逗号分隔" />
+              </label>
+              <label>
+                关键词
+                <input id="tags" placeholder="安可, 内场, 摇滚" />
+              </label>
+              <label class="wide">
+                备注
+                <textarea id="notes" rows="5" placeholder="记录返场、印象最深的歌、票价、座位等"></textarea>
+              </label>
+              <label class="wide">
+                歌单
+                <textarea id="setlist" rows="4" placeholder="每行一首歌"></textarea>
+              </label>
+            </div>
+            <div class="form-actions">
+              <button id="cancelEditBtn" class="ghost" type="button" hidden>取消编辑</button>
+              <button type="submit">保存记录</button>
+            </div>
           </div>
         </form>
 
         <section class="panel list-panel">
           <div class="section-title">
-            <h2>票夹</h2>
-            <p>像翻票根一样回看现场。</p>
+            <div>
+              <h2>票夹</h2>
+              <p>像翻票根一样回看现场。</p>
+            </div>
+            <div class="view-toggle" aria-label="视图切换">
+              <button id="ticketViewBtn" class="ghost active" type="button">票根</button>
+              <button id="bubbleViewBtn" class="ghost" type="button">泡泡</button>
+            </div>
           </div>
           <div class="filters">
             <input id="searchInput" placeholder="搜索艺人、演出、城市、票价、备注" />
