@@ -130,6 +130,7 @@ function renderAuth() {
   if (!cloud) {
     authForm.classList.remove("signed-in");
     authPanel.classList.remove("signed-in-panel");
+    document.body.classList.remove("signed-in");
     setStatus("当前是本地单人模式。配置 Supabase 后可登录并跨设备同步。");
     return;
   }
@@ -138,6 +139,7 @@ function renderAuth() {
     setStatus(`已登录：${currentUser.email}`);
     authForm.classList.add("signed-in");
     authPanel.classList.add("signed-in-panel");
+    document.body.classList.add("signed-in");
     authEmail.hidden = true;
     authPassword.hidden = true;
     loginBtn.hidden = true;
@@ -149,6 +151,7 @@ function renderAuth() {
   setStatus("请登录或注册。登录后，每个用户只能看到自己的演出记录。");
   authForm.classList.remove("signed-in");
   authPanel.classList.remove("signed-in-panel");
+  document.body.classList.remove("signed-in");
   authEmail.hidden = false;
   authPassword.hidden = false;
   loginBtn.hidden = false;
@@ -194,6 +197,27 @@ function normalizeCity(value = "") {
   return cityRoots.find((root) => city.includes(root)) || city;
 }
 
+function normalizeArtist(value = "") {
+  const artist = String(value).trim();
+  const key = artist.toLowerCase().replace(/\s+/g, "");
+  const aliases = {
+    day6: "DAY6",
+    svt: "SEVENTEEN",
+    seventeen: "SEVENTEEN",
+    세븐틴: "SEVENTEEN",
+    kisslife: "Kiss of Life",
+    kissoflife: "Kiss of Life",
+    kiof: "Kiss of Life",
+    hw: "HW",
+    ds: "DS",
+    idle: "i-dle",
+    gidle: "i-dle",
+    "g-idle": "i-dle",
+    여자아이들: "i-dle",
+  };
+  return aliases[key] || artist;
+}
+
 function getFormShow() {
   return {
     id: fields.editingId.value || crypto.randomUUID(),
@@ -222,12 +246,17 @@ function resetForm() {
   cancelEditBtn.hidden = true;
   formTitle.textContent = "新增记录";
   editNotice.hidden = true;
+  form.classList.add("collapsed");
+  document.body.classList.remove("form-expanded");
   document.body.classList.remove("editing-record");
+  toggleFormBtn.textContent = "新增";
 }
 
 function setFormExpanded(expanded) {
   formBody.hidden = !expanded;
-  toggleFormBtn.textContent = expanded ? "收起" : "展开";
+  form.classList.toggle("collapsed", !expanded);
+  document.body.classList.toggle("form-expanded", expanded);
+  toggleFormBtn.textContent = expanded ? "收起" : "新增";
 }
 
 function enterEditMode() {
@@ -245,7 +274,7 @@ function exitEditMode() {
 }
 
 function renderStats() {
-  const artists = new Set(shows.map((show) => show.artist).filter(Boolean));
+  const artists = new Set(shows.map((show) => normalizeArtist(show.artist)).filter(Boolean));
   const cities = new Set(shows.map((show) => normalizeCity(show.city)).filter(Boolean));
   const spend = summarizeSpend(shows);
 
@@ -267,7 +296,7 @@ function summarizeSpend(items) {
 function formatSpendSummary(spend) {
   const entries = Object.entries(spend);
   if (!entries.length) return "-";
-  if (moneyHidden) return "••••";
+  if (moneyHidden) return "🤫 ••••";
   return entries.map(([currency, amount]) => `${currency}${formatAmount(amount)}`).join(" / ");
 }
 
@@ -281,6 +310,7 @@ function getVisibleShows() {
     const haystack = [
       show.title,
       show.artist,
+      normalizeArtist(show.artist),
       show.city,
       show.venue,
       show.status,
@@ -573,20 +603,20 @@ function renderSummary(type = activeSummary) {
   } else if (type === "artists") {
     summaryTitle.textContent = "艺人汇总";
     summarySubtitle.textContent = "看过最多的艺人会排在前面。";
-    summaryBubbles.innerHTML = renderCountBubbles(countBy(shows, (show) => show.artist));
+    summaryBubbles.innerHTML = renderCountBubbles(countBy(shows, (show) => normalizeArtist(show.artist)));
   } else if (type === "cities") {
     summaryTitle.textContent = "城市汇总";
     summarySubtitle.textContent = "按城市统计演出次数。";
     summaryBubbles.innerHTML = renderCountBubbles(countBy(shows, (show) => normalizeCity(show.city)));
   } else if (type === "spend") {
     summaryTitle.textContent = "票价汇总";
-    summarySubtitle.textContent = moneyHidden ? "金额已隐藏。" : "按币种分别汇总已填写的票价。";
+    summarySubtitle.textContent = moneyHidden ? "🤫 金额已隐藏。" : "按币种分别汇总已填写的票价。";
     const spend = summarizeSpend(shows);
     summaryBubbles.innerHTML = Object.entries(spend).length
       ? Object.entries(spend)
           .map(
             ([currency, amount]) =>
-              `<span class="summary-bubble"><strong>${currency}</strong><small>${moneyHidden ? "••••" : formatAmount(amount)}</small></span>`,
+              `<span class="summary-bubble"><strong>${currency}</strong><small>${moneyHidden ? "🤫 ••••" : formatAmount(amount)}</small></span>`,
           )
           .join("")
       : `<span class="summary-bubble"><strong>暂无票价</strong><small>导入或填写票价后显示</small></span>`;
@@ -790,6 +820,7 @@ importInput.addEventListener("change", async () => {
 });
 
 async function init() {
+  setFormExpanded(false);
   const authParams = new URLSearchParams(window.location.hash.slice(1));
   const authError = authParams.get("error_description");
   if (authError) setStatus(`邮箱确认失败：${authError}`);
