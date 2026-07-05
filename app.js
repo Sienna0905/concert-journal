@@ -61,6 +61,7 @@ const editNotice = document.querySelector("#editNotice");
 const ticketViewBtn = document.querySelector("#ticketViewBtn");
 const bubbleViewBtn = document.querySelector("#bubbleViewBtn");
 const stackViewBtn = document.querySelector("#stackViewBtn");
+const mapViewBtn = document.querySelector("#mapViewBtn");
 const toolMenus = document.querySelectorAll(".tool-menu");
 
 let shows = loadLocalShows();
@@ -213,6 +214,35 @@ function normalizeCity(value = "") {
   return cityRoots.find((root) => city.includes(root)) || city;
 }
 
+const cityPoints = {
+  首尔: { x: 69, y: 34 },
+  光州: { x: 66, y: 43 },
+  釜山: { x: 70, y: 45 },
+  香港: { x: 54, y: 68 },
+  澳门: { x: 52, y: 70 },
+  北京: { x: 52, y: 36 },
+  上海: { x: 58, y: 52 },
+  广州: { x: 52, y: 66 },
+  深圳: { x: 54, y: 67 },
+  成都: { x: 40, y: 54 },
+  台北: { x: 63, y: 64 },
+  东京: { x: 82, y: 46 },
+  大阪: { x: 78, y: 52 },
+  曼谷: { x: 44, y: 82 },
+  新加坡: { x: 45, y: 95 },
+  吉隆坡: { x: 43, y: 91 },
+};
+
+function getCityPoint(city = "") {
+  const normalized = normalizeCity(city);
+  if (cityPoints[normalized]) return cityPoints[normalized];
+  const seed = Array.from(normalized).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return {
+    x: 38 + (seed % 38),
+    y: 34 + (seed % 48),
+  };
+}
+
 function normalizeArtist(value = "") {
   const artist = String(value).trim();
   const key = artist.toLowerCase().replace(/\s+/g, "");
@@ -354,15 +384,22 @@ function renderShows() {
   showsList.classList.toggle("bubble-view", ticketView === "bubble");
   showsList.classList.toggle("stack-view", ticketView === "stack");
   showsList.classList.toggle("spread", ticketView === "stack" && stackSpread);
+  showsList.classList.toggle("map-view", ticketView === "map");
   ticketViewBtn.classList.toggle("active", ticketView === "ticket");
   bubbleViewBtn.classList.toggle("active", ticketView === "bubble");
   stackViewBtn.classList.toggle("active", ticketView === "stack");
+  mapViewBtn.classList.toggle("active", ticketView === "map");
 
   if (!visibleShows.length) {
     const empty = document.createElement("div");
     empty.className = "empty";
     empty.textContent = "还没有匹配的演出记录";
     showsList.append(empty);
+    return;
+  }
+
+  if (ticketView === "map") {
+    renderMapCalendar(visibleShows);
     return;
   }
 
@@ -416,6 +453,127 @@ function renderShows() {
 
     showsList.append(item);
   });
+}
+
+function renderMapCalendar(visibleShows) {
+  const datedShows = visibleShows.filter((show) => show.date);
+  const showsByDate = countBy(datedShows, (show) => show.date);
+  const years = [...new Set(datedShows.map((show) => show.date.slice(0, 4)))].sort();
+  const calendarYears = years.length ? years : [String(new Date().getFullYear())];
+  const maxDayCount = Math.max(1, ...Object.values(showsByDate));
+  const cities = countBy(
+    visibleShows.filter((show) => show.city),
+    (show) => normalizeCity(show.city),
+  );
+
+  const board = document.createElement("article");
+  board.className = "map-calendar-board";
+  board.innerHTML = `
+    <section class="calendar-card">
+      <div class="visual-head">
+        <div>
+          <h3>演出日历</h3>
+          <p>有颜色的日期，就是去现场的日子。</p>
+        </div>
+        <span>${datedShows.length} 天</span>
+      </div>
+      <div class="calendar-years">
+        ${calendarYears.map((year) => renderCalendarYear(year, showsByDate, visibleShows, maxDayCount)).join("")}
+      </div>
+      <div class="calendar-events">${renderCalendarEvents(datedShows)}</div>
+    </section>
+    <section class="map-card">
+      <div class="visual-head">
+        <div>
+          <h3>亚洲现场地图</h3>
+          <p>按城市落点，气泡越大代表场次越多。</p>
+        </div>
+        <span>${Object.keys(cities).length} 城</span>
+      </div>
+      <div class="asia-map" aria-label="亚洲演出城市分布">
+        <div class="map-land land-east"></div>
+        <div class="map-land land-south"></div>
+        <div class="map-land land-islands"></div>
+        ${renderCityDots(cities)}
+      </div>
+      <div class="city-legend">${renderCityLegend(cities)}</div>
+    </section>
+  `;
+  showsList.append(board);
+}
+
+function renderCalendarEvents(datedShows) {
+  if (!datedShows.length) return `<span>还没有填写日期的演出</span>`;
+  return datedShows
+    .slice()
+    .sort((a, b) => (a.date || "").localeCompare(b.date || ""))
+    .map((show) => `
+      <span>
+        <strong>${formatDate(show.date)}</strong>
+        ${escapeHtml(show.city || "未填写城市")} · ${escapeHtml(show.artist || "未命名")}
+      </span>
+    `)
+    .join("");
+}
+
+function renderCalendarYear(year, showsByDate, visibleShows, maxDayCount) {
+  const months = Array.from({ length: 12 }, (_, month) => {
+    const firstDay = new Date(Number(year), month, 1).getDay();
+    const daysInMonth = new Date(Number(year), month + 1, 0).getDate();
+    const blanks = Array.from({ length: firstDay }, () => `<span class="calendar-day blank"></span>`).join("");
+    const days = Array.from({ length: daysInMonth }, (_, index) => {
+      const day = index + 1;
+      const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const count = showsByDate[date] || 0;
+      const level = count ? Math.ceil((count / maxDayCount) * 4) : 0;
+      const details = visibleShows
+        .filter((show) => show.date === date)
+        .map((show) => `${show.artist || "未命名"} · ${show.city || "未填写城市"}`)
+        .join(" / ");
+      return `<span class="calendar-day level-${level}" title="${escapeHtml(details)}">${day}</span>`;
+    }).join("");
+    return `
+      <div class="calendar-month">
+        <strong>${month + 1}月</strong>
+        <div class="calendar-days">${blanks}${days}</div>
+      </div>
+    `;
+  }).join("");
+  return `
+    <div class="calendar-year">
+      <h4>${year}</h4>
+      <div class="calendar-months">${months}</div>
+    </div>
+  `;
+}
+
+function renderCityDots(cities) {
+  const entries = Object.entries(cities).sort((a, b) => b[1] - a[1]);
+  const maxCount = Math.max(1, ...entries.map(([, count]) => count));
+  return entries
+    .map(([city, count]) => {
+      const point = getCityPoint(city);
+      const size = 18 + Math.round((count / maxCount) * 22);
+      return `
+        <span
+          class="map-dot"
+          style="left:${point.x}%; top:${point.y}%; width:${size}px; height:${size}px;"
+          title="${escapeHtml(city)} · ${count} 场"
+        >
+          <i>${count}</i>
+          <em>${escapeHtml(city)}</em>
+        </span>
+      `;
+    })
+    .join("");
+}
+
+function renderCityLegend(cities) {
+  const entries = Object.entries(cities).sort((a, b) => b[1] - a[1]);
+  if (!entries.length) return `<span>还没有城市记录</span>`;
+  return entries
+    .map(([city, count]) => `<span><strong>${escapeHtml(city)}</strong>${count} 场</span>`)
+    .join("");
 }
 
 function escapeHtml(value) {
@@ -793,6 +951,13 @@ bubbleViewBtn.addEventListener("click", () => {
 
 stackViewBtn.addEventListener("click", () => {
   ticketView = "stack";
+  stackSpread = false;
+  localStorage.setItem("concert-journal-ticket-view", ticketView);
+  renderShows();
+});
+
+mapViewBtn.addEventListener("click", () => {
+  ticketView = "map";
   stackSpread = false;
   localStorage.setItem("concert-journal-ticket-view", ticketView);
   renderShows();
