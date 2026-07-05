@@ -15,9 +15,9 @@
   --soft: #f2eadb;
   --danger: #a5302f;
   --font-sans: "思源黑体", "Source Han Sans SC", "Source Han Sans CN",
-    "Noto Sans CJK SC", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+    "Noto Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
   --font-serif: "汇文明朝体", "Huiwen Mincho", "Huiwen-mincho",
-    "Source Han Serif SC", "Songti SC", SimSun, serif;
+    "Noto Serif SC", "Source Han Serif SC", "Songti SC", SimSun, serif;
   font-family: var(--font-sans);
 }
 

@@ -460,6 +460,7 @@ function renderMapCalendar(visibleShows) {
   const showsByDate = countBy(datedShows, (show) => show.date);
   const years = [...new Set(datedShows.map((show) => show.date.slice(0, 4)))].sort();
   const calendarYears = years.length ? years : [String(new Date().getFullYear())];
+  const dateCount = Object.keys(showsByDate).length;
   const maxDayCount = Math.max(1, ...Object.values(showsByDate));
   const cities = countBy(
     visibleShows.filter((show) => show.city),
@@ -475,7 +476,7 @@ function renderMapCalendar(visibleShows) {
           <h3>演出日历</h3>
           <p>有颜色的日期，就是去现场的日子。</p>
         </div>
-        <span>${datedShows.length} 天</span>
+        <span>${dateCount} 天</span>
       </div>
       <div class="calendar-years">
         ${calendarYears.map((year) => renderCalendarYear(year, showsByDate, visibleShows, maxDayCount)).join("")}
@@ -517,7 +518,13 @@ function renderCalendarEvents(datedShows) {
 }
 
 function renderCalendarYear(year, showsByDate, visibleShows, maxDayCount) {
-  const months = Array.from({ length: 12 }, (_, month) => {
+  const activeMonths = Object.keys(showsByDate)
+    .filter((date) => date.startsWith(`${year}-`))
+    .map((date) => Number(date.slice(5, 7)) - 1);
+  const monthIndexes = [...new Set(activeMonths)].sort((a, b) => a - b);
+  const visibleMonths = monthIndexes.length ? monthIndexes : [new Date().getMonth()];
+
+  const months = visibleMonths.map((month) => {
     const firstDay = new Date(Number(year), month, 1).getDay();
     const daysInMonth = new Date(Number(year), month + 1, 0).getDate();
     const blanks = Array.from({ length: firstDay }, () => `<span class="calendar-day blank"></span>`).join("");
